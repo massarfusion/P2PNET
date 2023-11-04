@@ -223,7 +223,7 @@ class P2PNet(nn.Module):
         output_coord = regression + anchor_points
         output_class = classification
         out = {'pred_logits': output_class, 'pred_points': output_coord}
-       
+       # (BATCH, [points_predicted], 2)
         return out
 
 class SetCriterion_Crowd(nn.Module):
@@ -327,7 +327,7 @@ def build(args, training):
     # treats persons as a single class
     num_classes = 1
 
-    backbone = build_backbone(args)
+    backbone = build_backbone(args)# THE VGG backbone
     model = P2PNet(backbone, args.row, args.line)
     if not training: 
         return model
