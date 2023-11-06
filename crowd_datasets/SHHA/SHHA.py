@@ -10,29 +10,35 @@ import scipy.io as io
 
 class SHHA(Dataset):
     def __init__(self, data_root, transform=None, train=False, patch=False, flip=False):
-        self.root_path = data_root
-        self.train_lists = "shanghai_tech_part_a_train.list"
-        self.eval_list = "shanghai_tech_part_a_test.list"
-        # there may exist multiple list files
-        self.img_list_file = self.train_lists.split(',')
-        if train:
-            self.img_list_file = self.train_lists.split(',')
-        else:
-            self.img_list_file = self.eval_list.split(',')
+        '''
+        altered organization:
+        ├─data_dir/
+            ├─test_data(or train_data)/
+                ├─ ground_truth/
+                │  ├─ GT_IMG_1.mat
+                │  ├─ GT_IMG_2.mat
+                │  ├─ ...
+                ├─ images/
+                │  ├─ IMG_1.jpg
+                │  ├─ IMG_2.jpg
+                │  ├─ ...
 
-        self.img_map = {}
-        self.img_list = []
-        # loads the image/gt pairs
-        for _, train_list in enumerate(self.img_list_file):
-            train_list = train_list.strip()
-            with open(os.path.join(self.root_path, train_list)) as fin:
-                for line in fin:
-                    if len(line) < 2: 
-                        continue
-                    line = line.strip().split()
-                    self.img_map[os.path.join(self.root_path, line[0].strip())] = \
-                                    os.path.join(self.root_path, line[1].strip())
-        self.img_list = sorted(list(self.img_map.keys()))
+        '''
+        self.root_path = data_root
+        self.img_map = {}  # K图片路径V真值点文件路径
+        self.img_list = []  # 存储的是图片路径
+        
+        if train:
+            self.img_list = sorted( glob.glob(os.path.join(data_root,'train_data','images','*.jpg') ))
+            for file_dir in self.img_list:
+                gt_dir = file_dir.replace('images', 'ground-truth').replace('IMG', 'GT_IMG').replace('jpg', 'mat')
+                self.img_map[file_dir] = gt_dir
+        else:
+            self.img_list = sorted(glob.glob(os.path.join(data_root, 'test_data', 'images', '*.jpg')))
+            for file_dir in self.img_list:
+                gt_dir = file_dir.replace('images', 'ground-truth').replace('IMG', 'GT_IMG').replace('jpg', 'mat')
+                self.img_map[file_dir] = gt_dir
+        
         # number of samples
         self.nSamples = len(self.img_list)
         
@@ -40,6 +46,28 @@ class SHHA(Dataset):
         self.train = train
         self.patch = patch
         self.flip = flip
+        
+        # self.train_lists = "shanghai_tech_part_a_train.list"
+        # self.eval_list = "shanghai_tech_part_a_test.list"
+        # # there may exist multiple list files
+        # self.img_list_file = self.train_lists.split(',')
+        # if train:
+        #     self.img_list_file = self.train_lists.split(',')
+        # else:
+        #     self.img_list_file = self.eval_list.split(',')
+        #
+        #
+        # # loads the image/gt pairs
+        # for _, train_list in enumerate(self.img_list_file):
+        #     train_list = train_list.strip()
+        #     with open(os.path.join(self.root_path, train_list)) as fin:  # open up the dataset catalog file and read
+        #         for line in fin:
+        #             if len(line) < 2:
+        #                 continue
+        #             line = line.strip().split()
+        #             self.img_map[os.path.join(self.root_path, line[0].strip())] = \
+        #                             os.path.join(self.root_path, line[1].strip())
+        
 
     def __len__(self):
         return self.nSamples
@@ -66,7 +94,7 @@ class SHHA(Dataset):
                 point *= scale
         # random crop augumentaiton
         if self.train and self.patch:
-            img, point = random_crop(img, point)
+            img, point = random_crop(img, point, num_patch=4)
             for i, _ in enumerate(point):
                 point[i] = torch.Tensor(point[i])
         # random flipping
@@ -98,14 +126,16 @@ def load_data(img_gt_path, train):
     img = cv2.imread(img_path)
     img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     # load ground truth points
-    points = []
-    with open(gt_path) as f_label:
-        for line in f_label:
-            x = float(line.strip().split(' ')[0])
-            y = float(line.strip().split(' ')[1])
-            points.append([x, y])
+    from scipy.io import loadmat
+    locations = loadmat(gt_path)['image_info'][0][0]['location'][0][0]
+    # points = []
+    # with open(gt_path) as f_label:
+    #     for line in f_label:
+    #         x = float(line.strip().split(' ')[0])
+    #         y = float(line.strip().split(' ')[1])
+    #         points.append([x, y])
 
-    return img, np.array(points)
+    return img, np.array(locations)
 
 # random crop augumentation
 def random_crop(img, den, num_patch=4):

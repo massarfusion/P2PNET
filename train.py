@@ -99,7 +99,8 @@ def main(args):
     # move to GPU
     model.to(device)
     criterion.to(device)
-
+    
+    
     model_without_ddp = model
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -144,7 +145,11 @@ def main(args):
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
             args.start_epoch = checkpoint['epoch'] + 1
 
+    for name, param in model.named_parameters():
+        print(name," requires grad? ",param.requires_grad)
+    
     print("Start training")
+    
     start_time = time.time()
     # save the performance during the training
     mae = []

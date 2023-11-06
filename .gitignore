@@ -2406,3 +2406,11 @@ models/__pycache__/vgg_.cpython-37.pyc
 util/__pycache__/__init__.cpython-37.pyc
 util/__pycache__/misc.cpython-37.pyc
 weights/VGG16BN.pth
+logs/events.out.tfevents.1699112735.DESKTOP-RPMS5O5
+logs/events.out.tfevents.1699113154.DESKTOP-RPMS5O5
+logs/events.out.tfevents.1699116217.DESKTOP-RPMS5O5
+logs/events.out.tfevents.1699116315.DESKTOP-RPMS5O5
+logs/events.out.tfevents.1699116433.DESKTOP-RPMS5O5
+crowd_datasets/SHHA/__pycache__/__init__.cpython-37.pyc
+crowd_datasets/SHHA/__pycache__/loading_data.cpython-37.pyc
+crowd_datasets/SHHA/__pycache__/SHHA.cpython-37.pyc
